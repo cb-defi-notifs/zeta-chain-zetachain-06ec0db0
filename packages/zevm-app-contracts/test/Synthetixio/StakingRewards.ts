@@ -4,7 +4,7 @@ import { BigNumber } from "ethers";
 import { parseEther } from "ethers/lib/utils";
 import { ethers } from "hardhat";
 
-import { StakingRewards, StakingRewards__factory, TestZRC20, TestZRC20__factory } from "../../typechain-types";
+import { MockZRC20, MockZRC20__factory, StakingRewards, StakingRewards__factory } from "../../typechain-types";
 
 const { assert, addSnapshotBeforeRestoreAfterEach } = require("./common");
 
@@ -13,8 +13,8 @@ const { currentTime, fastForward } = require("./utils")();
 const toUnit = parseEther;
 
 const mockToken = async (acount: SignerWithAddress, name: string, symbol: string) => {
-  const ZRC20Factory = (await ethers.getContractFactory("TestZRC20")) as TestZRC20__factory;
-  const token = (await ZRC20Factory.connect(acount).deploy(parseUnits("1000000"), name, symbol)) as TestZRC20;
+  const ZRC20Factory = (await ethers.getContractFactory("MockZRC20")) as MockZRC20__factory;
+  const token = (await ZRC20Factory.connect(acount).deploy(parseUnits("1000000"), name, symbol)) as MockZRC20;
   return token;
 };
 
@@ -142,7 +142,7 @@ describe("StakingRewards", () => {
       const event = receipt.events?.find((e: any) => e.event === "Recovered");
       assert.eventEqual(event, "Recovered", {
         amount: amount,
-        token: externalRewardsToken.address
+        token: externalRewardsToken.address,
       });
     });
   });
@@ -276,7 +276,7 @@ describe("StakingRewards", () => {
     });
   });
 
-  describe("getReward()", () => {
+  describe("getReward(false)", () => {
     it("should increase rewards token balance", async () => {
       const totalToStake = toUnit("100");
       const totalToDistribute = toUnit("5000");
@@ -292,7 +292,7 @@ describe("StakingRewards", () => {
 
       const initialRewardBal = await rewardsToken.balanceOf(stakingAccount1.address);
       const initialEarnedBal = await stakingRewards.earned(stakingAccount1.address);
-      await stakingRewards.connect(stakingAccount1).getReward();
+      await stakingRewards.connect(stakingAccount1).getReward(false);
       const postRewardBal = await rewardsToken.balanceOf(stakingAccount1.address);
       const postEarnedBal = await stakingRewards.earned(stakingAccount1.address);
 
@@ -346,7 +346,7 @@ describe("StakingRewards", () => {
       const receipt = await transaction.wait();
       const event = receipt.events?.find((e: any) => e.event === "RewardsDurationUpdated");
       assert.eventEqual(event, "RewardsDurationUpdated", {
-        newDuration: seventyDays
+        newDuration: seventyDays,
       });
       const newDuration = await stakingRewards.rewardsDuration();
       assert.bnEqual(newDuration, seventyDays);
@@ -365,7 +365,7 @@ describe("StakingRewards", () => {
       await stakingRewards.connect(rewardsDistribution).notifyRewardAmount(totalToDistribute);
 
       await fastForward(DAY * 4);
-      await stakingRewards.connect(stakingAccount1).getReward();
+      await stakingRewards.connect(stakingAccount1).getReward(false);
       await fastForward(DAY * 4);
 
       // New Rewards period much lower
@@ -374,7 +374,7 @@ describe("StakingRewards", () => {
       const receipt = await transaction.wait();
       const event = receipt.events?.find((e: any) => e.event === "RewardsDurationUpdated");
       assert.eventEqual(event, "RewardsDurationUpdated", {
-        newDuration: seventyDays
+        newDuration: seventyDays,
       });
 
       const newDuration = await stakingRewards.rewardsDuration();
@@ -383,7 +383,7 @@ describe("StakingRewards", () => {
       await stakingRewards.connect(rewardsDistribution).notifyRewardAmount(totalToDistribute);
 
       await fastForward(DAY * 71);
-      await stakingRewards.connect(stakingAccount1).getReward();
+      await stakingRewards.connect(stakingAccount1).getReward(false);
     });
   });
 
@@ -434,7 +434,7 @@ describe("StakingRewards", () => {
     });
   });
 
-  describe("exit()", () => {
+  describe("exit(false)", () => {
     it("should retrieve all earned and increase rewards bal", async () => {
       const totalToStake = toUnit("100");
       const totalToDistribute = toUnit("5000");
@@ -450,7 +450,7 @@ describe("StakingRewards", () => {
 
       const initialRewardBal = await rewardsToken.balanceOf(stakingAccount1.address);
       const initialEarnedBal = await stakingRewards.earned(stakingAccount1.address);
-      await stakingRewards.connect(stakingAccount1).exit();
+      await stakingRewards.connect(stakingAccount1).exit(false);
       const postRewardBal = await rewardsToken.balanceOf(stakingAccount1.address);
       const postEarnedBal = await stakingRewards.earned(stakingAccount1.address);
 
@@ -545,12 +545,12 @@ describe("StakingRewards", () => {
       assert.bnClose(rewardRewardsEarned, rewardRewardsEarnedPostWithdraw, toUnit("0.1"));
       // Get rewards
       const initialRewardBal = await rewardsToken.balanceOf(stakingAccount1.address);
-      await stakingRewards.connect(stakingAccount1).getReward();
+      await stakingRewards.connect(stakingAccount1).getReward(false);
       const postRewardRewardBal = await rewardsToken.balanceOf(stakingAccount1.address);
       assert.bnGt(postRewardRewardBal, initialRewardBal);
       // Exit
       const preExitLPBal = await stakingToken.balanceOf(stakingAccount1.address);
-      await stakingRewards.connect(stakingAccount1).exit();
+      await stakingRewards.connect(stakingAccount1).exit(false);
       const postExitLPBal = await stakingToken.balanceOf(stakingAccount1.address);
       assert.bnGt(postExitLPBal, preExitLPBal);
     });

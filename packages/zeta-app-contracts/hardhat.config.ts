@@ -1,11 +1,11 @@
-import "@nomiclabs/hardhat-etherscan";
+import "@nomicfoundation/hardhat-verify";
 import "@nomiclabs/hardhat-waffle";
 import "@typechain/hardhat";
 import "hardhat-gas-reporter";
 import "solidity-coverage";
 import "tsconfig-paths/register";
 
-import { getHardhatConfigNetworks, getHardhatConfigScanners } from "@zetachain/addresses-tools/src/networks";
+import { getHardhatConfigNetworks } from "@zetachain/networks";
 import * as dotenv from "dotenv";
 import type { HardhatUserConfig } from "hardhat/types";
 
@@ -14,21 +14,51 @@ dotenv.config();
 const PRIVATE_KEYS = process.env.PRIVATE_KEY !== undefined ? [`0x${process.env.PRIVATE_KEY}`] : [];
 
 const config: HardhatUserConfig = {
+  //@ts-ignore
   etherscan: {
-    ...getHardhatConfigScanners(),
+    apiKey: {
+      // BSC
+      bsc: process.env.BSCSCAN_API_KEY || "",
+      bscTestnet: process.env.BSCSCAN_API_KEY || "",
+      // ETH
+      goerli: process.env.ETHERSCAN_API_KEY || "",
+      mainnet: process.env.ETHERSCAN_API_KEY || "",
+      zeta_mainnet: "NO_TOKEN",
+      zeta_testnet: "NO_TOKEN",
+    },
+    //@ts-ignore
+    customChains: [
+      {
+        chainId: 7000,
+        network: "zeta_mainnet",
+        urls: {
+          apiURL: "https://zetachain.blockscout.com/api",
+          browserURL: "https://zetachain.blockscout.com",
+        },
+      },
+      {
+        chainId: 7001,
+        network: "zeta_testnet",
+        urls: {
+          apiURL: "https://zetachain-athens-3.blockscout.com/api",
+          browserURL: "https://zetachain-athens-3.blockscout.com",
+        },
+      },
+    ],
   },
   gasReporter: {
     currency: "USD",
     enabled: process.env.REPORT_GAS !== undefined,
   },
   networks: {
-    ...getHardhatConfigNetworks(PRIVATE_KEYS),
+    ...getHardhatConfigNetworks(),
   },
   solidity: {
     compilers: [
       { version: "0.5.10" /** For create2 factory */ },
       { version: "0.6.6" /** For uniswap v2 */ },
       { version: "0.8.7" },
+      { version: "0.4.18" /** For WETH / WZETA */ },
     ],
     settings: {
       /**

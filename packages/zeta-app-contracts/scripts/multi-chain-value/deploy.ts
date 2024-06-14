@@ -1,44 +1,44 @@
-import { getChainId, isNetworkName, isZetaTestnet } from "@zetachain/addresses";
-import { saveAddress } from "@zetachain/addresses-tools";
-import { network } from "hardhat";
+import { getAddress, isProtocolNetworkName, isTestnetNetwork } from "@zetachain/protocol-contracts/dist/lib";
+import { ethers, network } from "hardhat";
 
-import { getMultiChainValue } from "../../lib/multi-chain-value/MultiChainValue.helpers";
-import { getAddress } from "../../lib/shared/address.helpers";
+import { MultiChainValue, MultiChainValue__factory } from "../../typechain-types";
+import { getChainId, saveAddress } from "../address.helpers";
 
 const networkName = network.name;
-const { ZETA_NETWORK } = process.env;
 
 async function main() {
-  if (!isNetworkName(networkName)) throw new Error("Invalid network name");
+  if (!isProtocolNetworkName(networkName)) throw new Error("Invalid network name");
 
-  const multiChainValueContract = await getMultiChainValue(getAddress("multiChainValue"));
+  const connectorAddress = getAddress("connector", networkName);
+  const zetaTokenAddress = getAddress("zetaToken", networkName);
 
-  if (isZetaTestnet(ZETA_NETWORK)) {
-    networkName !== "goerli" &&
-      (await (await multiChainValueContract.addAvailableChainId(getChainId("goerli")))
-        .wait()
-        .catch(e => console.error(e)));
+  const Factory = (await ethers.getContractFactory("MultiChainValue")) as MultiChainValue__factory;
+  const contract = (await Factory.deploy(connectorAddress, zetaTokenAddress)) as MultiChainValue;
+  await contract.deployed();
 
-    networkName !== "polygon-mumbai" &&
-      (await (await multiChainValueContract.addAvailableChainId(getChainId("polygon-mumbai")))
-        .wait()
-        .catch(e => console.error(e)));
+  console.log("MultiChainValue deployed to:", contract.address);
+  saveAddress("multiChainValue", contract.address);
 
-    networkName !== "bsc-testnet" &&
-      (await (await multiChainValueContract.addAvailableChainId(getChainId("bsc-testnet")))
-        .wait()
-        .catch(e => console.error(e)));
+  console.log("MultiChainValue post rutine...");
 
-    networkName !== "ropsten" &&
-      (await (await multiChainValueContract.addAvailableChainId(getChainId("ropsten")))
-        .wait()
-        .catch(e => console.error(e)));
+  //@ts-ignore
+  const isTestnet = isTestnetNetwork(networkName);
+
+  if (isTestnet) {
+    await (await contract.addAvailableChainId(getChainId("goerli_testnet"))).wait().catch((e: any) => console.error(e));
+    await (await contract.addAvailableChainId(getChainId("bsc_testnet"))).wait().catch((e: any) => console.error(e));
+    await (await contract.addAvailableChainId(getChainId("zeta_testnet"))).wait().catch((e: any) => console.error(e));
+    await (await contract.addAvailableChainId(getChainId("mumbai_testnet"))).wait().catch((e: any) => console.error(e));
+  } else {
+    await (await contract.addAvailableChainId(getChainId("bsc_mainnet"))).wait().catch((e: any) => console.error(e));
+    await (await contract.addAvailableChainId(getChainId("zeta_mainnet"))).wait().catch((e: any) => console.error(e));
+    await (await contract.addAvailableChainId(getChainId("eth_mainnet"))).wait().catch((e: any) => console.error(e));
   }
 
-  saveAddress("multiChainValue", multiChainValueContract.address);
+  console.log("MultiChainValue post rutine finish");
 }
 
-main().catch(error => {
+main().catch((error) => {
   console.error(error);
   process.exit(1);
 });

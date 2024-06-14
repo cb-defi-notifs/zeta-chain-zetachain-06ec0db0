@@ -1,13 +1,6 @@
-# ZetaChain
+# ZetaChain App Contracts
 
-ZetaChain is a public, decentralized blockchain and smart contract platform built for omnichain interoperability.
-
-## What's in this repo?
-
-* Utilities to interact with ZetaChain's contracts from your dApp, scripts, or tests.
-* Interfaces to easily develop omnichain contracts.
-* Omnichain dApp example contracts.
-* Protocol native contracts (Zeta Token, Zeta Connector).
+Contracts of official applications deployed by the core team to ZetaChain.
 
 ## Learn more about ZetaChain
 
@@ -34,13 +27,9 @@ ZetaChain is a public, decentralized blockchain and smart contract platform buil
 
 ### Packages
 
-#### [Addresses](packages/addresses)
+#### [Zeta App contracts](packages/zeta-app-contracts)
 
-#### [Example contracts](packages/example-contracts)
-
-#### [Protocol contracts](packages/example-contracts)
-
-#### [ZEVM contracts](packages/zevm-contracts)
+#### [ZEVM App contracts](packages/zevm-app-contracts)
 
 ### Cross-repo commands
 
@@ -72,6 +61,26 @@ yarn lint
 yarn lint:fix
 ```
 
+## Coverage
+To check the test coverage run the follow command on the desire package
+
+```bash
+npx hardhat coverage
+```
+
+## Static test
+We run slither on our packages. If you want to run it should install slither
+
+```bash
+brew install slither-analyzer
+```
+and execute it
+
+```bash
+slither . --filter-paths "contracts/test/|node_modules/" --exclude naming-convention
+```
+
 ## Contributing
 
 We welcome (and appreciate) everyone's contributions. If you wanna contribute, read [CONTRIBUTING.md](CONTRIBUTING.md) for next steps.
+

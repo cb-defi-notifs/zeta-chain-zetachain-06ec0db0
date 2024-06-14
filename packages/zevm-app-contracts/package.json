@@ -1,13 +1,18 @@
 {
   "name": "@zetachain/zevm-app-contracts",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "license": "MIT",
-  "private": true,
   "author": "zetachain",
   "publishConfig": {
     "access": "public",
     "registry": "https://registry.npmjs.org/"
   },
+  "files": [
+    "contracts",
+    "data",
+    "scripts",
+    "typechain-types"
+  ],
   "scripts": {
     "clean": "npx hardhat clean",
     "compile": "npx hardhat compile",
@@ -29,11 +34,10 @@
     "tsconfig-paths": "^3.14.1"
   },
   "dependencies": {
-    "@openzeppelin/contracts": "4.8.3",
+    "@openzeppelin/contracts": "4.9.3",
     "@uniswap/v2-periphery": "1.1.0-beta.0",
-    "@zetachain/addresses": "workspace:^",
-    "@zetachain/addresses-tools": "workspace:^",
-    "@zetachain/protocol-contracts": "^0.0.6",
+    "@zetachain/networks": "^4.0.0",
+    "@zetachain/protocol-contracts": "^4.0.1",
     "ethers": "5.6.8"
   }
 }
